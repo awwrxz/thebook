@@ -32,12 +32,47 @@ header p{color:#a0b0c0;font-size:.82rem;letter-spacing:.06em;font-family:sans-se
 .stats strong{color:var(--gold)}
 
 /* ── FILTER ── */
-.filter-panel{background:#fff;border-bottom:1px solid var(--border);padding:18px 48px;position:sticky;top:96px;z-index:90;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+/* ── HEADER mobile ── */
+@media(max-width:640px){
+  header{padding:18px 20px 14px}
+  header h1{font-size:1.1rem}
+  .stats{font-size:.72rem}
+}
+
+/* ── FILTER PANEL ── */
+.filter-panel{background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:90;box-shadow:0 2px 8px rgba(0,0,0,.06)}
 .filter-inner{max-width:1280px;margin:0 auto}
+
+/* 收合控制列 */
+.filter-toggle-bar{display:flex;align-items:center;gap:10px;padding:10px 48px;cursor:pointer;user-select:none;border-bottom:1px solid transparent;transition:border-color .2s}
+.filter-toggle-bar:hover{background:#fafafa}
+.filter-panel.open .filter-toggle-bar{border-bottom-color:var(--border)}
+.toggle-label{font-family:sans-serif;font-size:.78rem;font-weight:600;color:var(--navy);letter-spacing:.04em}
+.toggle-arrow{font-size:.7rem;color:var(--muted);transition:transform .25s}
+.filter-panel.open .toggle-arrow{transform:rotate(180deg)}
+.active-badge{background:var(--navy);color:var(--gold);font-family:sans-serif;font-size:.65rem;padding:1px 7px;border-radius:10px;display:none}
+.active-badge.show{display:inline-block}
+.toggle-search{flex:1;max-width:260px;margin-left:auto}
+.toggle-search input{width:100%;padding:5px 12px;border:1.5px solid var(--border);border-radius:20px;font-family:sans-serif;font-size:.8rem;outline:none;background:var(--cream)}
+.toggle-search input:focus{border-color:var(--gold)}
+
+/* 展開區塊 */
+.filter-body{overflow:hidden;max-height:0;transition:max-height .3s ease, padding .3s ease;padding:0 48px}
+.filter-panel.open .filter-body{max-height:400px;padding:14px 48px 16px}
+
 .filter-row{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;flex-wrap:wrap}
 .filter-row:last-child{margin-bottom:0}
 .filter-label{font-family:sans-serif;font-size:.7rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;min-width:58px;padding-top:5px;white-space:nowrap}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
+.btn-clear{font-family:sans-serif;font-size:.72rem;color:var(--muted);cursor:pointer;border:1px solid var(--border);border-radius:12px;padding:4px 10px;background:none;transition:all .15s}
+.btn-clear:hover{background:var(--cream)}
+
+@media(max-width:640px){
+  .filter-toggle-bar{padding:10px 16px}
+  .filter-body{padding:0 16px}
+  .filter-panel.open .filter-body{padding:12px 16px 14px}
+  .toggle-search{max-width:140px}
+}
 .chip{display:inline-flex;align-items:center;padding:4px 12px;border-radius:20px;font-family:sans-serif;font-size:.75rem;cursor:pointer;border:1.5px solid transparent;transition:all .18s;user-select:none;white-space:nowrap}
 .chip.type  {border-color:#d0dce8;color:var(--tag-type);background:#f0f5fa}
 .chip.genre {border-color:#d0dde0;color:var(--tag-genre);background:#f0f6f0}
@@ -48,14 +83,12 @@ header p{color:#a0b0c0;font-size:.82rem;letter-spacing:.06em;font-family:sans-se
 .chip.genre.active {background:#d0dde0}
 .chip.growth.active{background:#e0d0dc}
 .chip.era.active   {background:#e8ddd0}
-.search-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-.search-row input{flex:1;max-width:300px;padding:6px 14px;border:1.5px solid var(--border);border-radius:20px;font-family:sans-serif;font-size:.82rem;outline:none;background:var(--cream)}
-.search-row input:focus{border-color:var(--gold)}
 .btn-clear{font-family:sans-serif;font-size:.72rem;color:var(--muted);cursor:pointer;border:1px solid var(--border);border-radius:12px;padding:4px 10px;background:none;transition:all .15s}
 .btn-clear:hover{background:var(--cream)}
 
 /* ── YEAR NAV ── */
 .year-nav{max-width:1280px;margin:0 auto;padding:20px 48px 0;display:flex;gap:8px;overflow-x:auto}
+@media(max-width:640px){.year-nav{padding:14px 16px 0}.grid{padding:0 16px 40px}.modal{padding:28px 22px}}
 .year-btn{font-family:sans-serif;font-size:.75rem;padding:4px 12px;border-radius:14px;border:1.5px solid var(--border);cursor:pointer;background:none;color:var(--muted);transition:all .15s;white-space:nowrap}
 .year-btn.active{background:var(--navy);color:var(--gold);border-color:var(--navy)}
 .year-btn:hover:not(.active){border-color:var(--navy);color:var(--navy)}
@@ -126,16 +159,27 @@ header p{color:#a0b0c0;font-size:.82rem;letter-spacing:.06em;font-family:sans-se
   </div>
 </header>
 
-<div class="filter-panel">
+<div class="filter-panel" id="filter-panel">
   <div class="filter-inner">
-    <div class="search-row">
-      <input type="text" id="search-input" placeholder="搜尋標題或關鍵字…">
-      <button class="btn-clear" onclick="clearAll()">清除篩選</button>
+    <!-- 永遠可見的收合列 -->
+    <div class="filter-toggle-bar" onclick="toggleFilter()">
+      <span class="toggle-label">篩選文章</span>
+      <span class="toggle-arrow">▼</span>
+      <span class="active-badge" id="active-badge">0 個篩選</span>
+      <div class="toggle-search">
+        <input type="text" id="search-input" placeholder="搜尋關鍵字…" onclick="event.stopPropagation()" oninput="onSearch(event)">
+      </div>
     </div>
-    <div class="filter-row"><span class="filter-label">主題類型</span><div class="chips" id="chips-type"></div></div>
-    <div class="filter-row"><span class="filter-label">書籍文類</span><div class="chips" id="chips-genre"></div></div>
-    <div class="filter-row"><span class="filter-label">個人成長</span><div class="chips" id="chips-growth"></div></div>
-    <div class="filter-row"><span class="filter-label">時代脈絡</span><div class="chips" id="chips-era"></div></div>
+    <!-- 展開區塊 -->
+    <div class="filter-body">
+      <div class="filter-row"><span class="filter-label">主題類型</span><div class="chips" id="chips-type"></div></div>
+      <div class="filter-row"><span class="filter-label">書籍文類</span><div class="chips" id="chips-genre"></div></div>
+      <div class="filter-row"><span class="filter-label">個人成長</span><div class="chips" id="chips-growth"></div></div>
+      <div class="filter-row"><span class="filter-label">時代脈絡</span><div class="chips" id="chips-era"></div></div>
+      <div style="margin-top:10px">
+        <button class="btn-clear" onclick="clearAll()">清除所有篩選</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -239,6 +283,7 @@ function render(){
   });
   if(!visible){ const el=document.createElement('div'); el.className='no-results'; el.textContent='沒有符合條件的文章。'; grid.appendChild(el); }
   document.getElementById('visible-count').textContent = visible;
+  updateBadge();
 }
 
 function openModal(i){
@@ -259,8 +304,25 @@ function closeModal(e){ if(e.target===document.getElementById('overlay')) closeM
 function closeModalBtn(){ document.getElementById('overlay').classList.remove('open'); document.body.style.overflow=''; }
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModalBtn(); });
 
-document.getElementById('search-input').addEventListener('input',e=>{ searchQ=e.target.value; render(); });
-function clearAll(){ active={type:new Set(),genre:new Set(),growth:new Set(),era:new Set()}; activeYear=null; searchQ=''; document.getElementById('search-input').value=''; document.querySelectorAll('.chip.active').forEach(c=>c.classList.remove('active')); document.querySelectorAll('.year-btn.active').forEach(b=>b.classList.remove('active')); render(); }
+function onSearch(e){ searchQ=e.target.value; render(); }
+function toggleFilter(){
+  const p=document.getElementById('filter-panel');
+  p.classList.toggle('open');
+}
+function updateBadge(){
+  const total=['type','genre','growth','era'].reduce((s,c)=>s+active[c].size,0)+(activeYear?1:0)+(searchQ?1:0);
+  const b=document.getElementById('active-badge');
+  b.textContent=total+' 個篩選';
+  b.classList.toggle('show',total>0);
+}
+function clearAll(){
+  active={type:new Set(),genre:new Set(),growth:new Set(),era:new Set()};
+  activeYear=null; searchQ='';
+  document.getElementById('search-input').value='';
+  document.querySelectorAll('.chip.active').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.year-btn.active').forEach(b=>b.classList.remove('active'));
+  render();
+}
 
 function init(){
   renderChips('chips-type','type');
@@ -268,6 +330,10 @@ function init(){
   renderChips('chips-growth','growth');
   renderChips('chips-era','era');
   buildYearNav();
+  // 桌機預設展開，手機預設收起
+  if(window.innerWidth > 640){
+    document.getElementById('filter-panel').classList.add('open');
+  }
   render();
 }
 </script>
